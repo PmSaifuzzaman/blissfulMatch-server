@@ -31,10 +31,19 @@ async function run() {
 
 
     // Biodata related api
+    // Get all biodatas
     app.get("/biodatas", async (req, res) => {
       const result = await biodataCollection.find().toArray();
       res.send(result);
     });
+
+    // GET sorted Featured biodata for homepage
+    app.get('/featuredBiodata', async (req, res) => {
+      const cursor = biodataCollection.find({ MembershipType: 'Premium' }).sort({ Age: -1 }).limit(6);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
 
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
