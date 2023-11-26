@@ -37,6 +37,24 @@ async function run() {
       res.send(result);
     });
 
+    // app.get("/biodatas", async (req, res) => {
+    //   const { biodataType } = req.query;
+
+    //   let filter = {};
+    //   if (biodataType) {
+    //     filter = { Biodata: biodataType };
+    //   }
+
+    //   try {
+    //     const result = await biodataCollection.find(filter).toArray();
+    //     res.send(result);
+    //   } catch (error) {
+    //     console.error("Error fetching data:", error);
+    //     res.status(500).send("Internal Server Error");
+    //   }
+    // });
+
+
     // GET sorted Featured biodata for homepage
     app.get('/featuredBiodata', async (req, res) => {
       const cursor = biodataCollection.find({ MembershipType: 'Premium' }).sort({ Age: -1 }).limit(6);
@@ -49,7 +67,7 @@ async function run() {
       const id = req.params.id;
       const result = await biodataCollection.findOne({ _id: new ObjectId(id) });
       res.send(result);
-      });
+    });
 
 
     // Connect the client to the server	(optional starting in v4.7)
