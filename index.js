@@ -27,6 +27,7 @@ async function run() {
   try {
 
     const biodataCollection = client.db("blissfulMatchDB").collection("biodatas");
+    const favouriteCollection = client.db("blissfulMatchDB").collection("favourites");
 
 
 
@@ -68,6 +69,19 @@ async function run() {
       const result = await biodataCollection.findOne({ _id: new ObjectId(id) });
       res.send(result);
     });
+
+
+
+
+
+
+    // Favourite Ralated api
+    app.post('/favourites', async (req, res) => {
+      const favouriteItem = req.body;
+      const result = await favouriteCollection.insertOne(favouriteItem);
+      res.send(result)
+    })
+
 
 
     // Connect the client to the server	(optional starting in v4.7)
