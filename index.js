@@ -76,10 +76,18 @@ async function run() {
 
 
     // Favourite Ralated api
-    app.get('/favourites', async(req, res) => {
-      const result = await favouriteCollection.find().toArray();
-      res.send(result)
-    })
+    app.get('/favourites', async (req, res) => {
+      try {
+        const userEmail = req.query.userEmail;
+        const query = { userEmail: userEmail };
+        console.log(query);
+        const result = await favouriteCollection.find(query).toArray();
+        res.send(result);
+      } catch (error) {
+        console.error('Error retrieving favorites:', error);
+        res.status(500).send('Internal Server Error');
+      }
+    });
 
     // Add to favourite
     app.post('/favourites', async (req, res) => {
