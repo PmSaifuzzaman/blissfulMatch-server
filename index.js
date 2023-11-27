@@ -76,6 +76,12 @@ async function run() {
 
 
     // Favourite Ralated api
+    app.get('/favourites', async(req, res) => {
+      const result = await favouriteCollection.find().toArray();
+      res.send(result)
+    })
+
+    // Add to favourite
     app.post('/favourites', async (req, res) => {
       const favouriteItem = req.body;
       const result = await favouriteCollection.insertOne(favouriteItem);
