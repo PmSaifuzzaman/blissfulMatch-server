@@ -72,9 +72,6 @@ async function run() {
 
 
 
-
-
-
     // Favourite Ralated api
     app.get('/favourites', async (req, res) => {
       try {
@@ -95,6 +92,12 @@ async function run() {
       const result = await favouriteCollection.insertOne(favouriteItem);
       res.send(result)
     })
+    // Delete from favourite
+    app.delete("/favourites/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await favouriteCollection.deleteOne({ _id: new ObjectId(id) });
+      res.send(result);
+      });
 
 
 
