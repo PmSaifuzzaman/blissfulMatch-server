@@ -1,5 +1,6 @@
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express')
+const jwt = require('jsonwebtoken')
 const cors = require('cors');
 require('dotenv').config()
 const app = express()
@@ -29,7 +30,12 @@ async function run() {
     const biodataCollection = client.db("blissfulMatchDB").collection("biodatas");
     const favouriteCollection = client.db("blissfulMatchDB").collection("favourites");
 
-
+    // jwt related api
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+      res.send({ token });
+    })
 
     // Biodata related api
     // Get all biodatas
@@ -37,6 +43,32 @@ async function run() {
       const result = await biodataCollection.find().toArray();
       res.send(result);
     });
+
+    // User related api
+    app.post('/biodatas', async (req, res) => {
+      const user = req.body;
+      // insert email if user doesnt exists: 
+      const query = { ContactEmail: user.ContactEmail }
+      const existingUser = await biodataCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: 'user already exists', insertedId: null })
+      }
+      const result = await biodataCollection.insertOne(user);
+      res.send(result);
+    });
+
+    // Make admin a User
+    app.patch('/biodatas/admin/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          role: 'admin'
+        }
+      }
+      const result = await biodataCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    })
 
     // app.get("/biodatas", async (req, res) => {
     //   const { biodataType } = req.query;
