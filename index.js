@@ -91,7 +91,7 @@ async function run() {
       const result = await manageUserCollection.find().toArray();
       res.send(result)
     });
-
+    // 
     app.post('/users', async (req, res) => {
       const user = req.body;
       // insert email if user doesnt exists: 
@@ -103,6 +103,41 @@ async function run() {
       const result = await manageUserCollection.insertOne(user);
       res.send(result);
     });
+
+    // Update User profile 
+    app.put('/users/:email', async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updatedBiodata = req.body;
+      const newUpdatedBiodata = {
+          $set: {
+            Biodata: updatedBiodata.Biodata,
+            BiodataNumber: updatedBiodata.BiodataNumber,
+            Name: updatedBiodata.Name,
+            ProfileImage: updatedBiodata.ProfileImage,
+            DateOfBirth: updatedBiodata.DateOfBirth,
+            Height: updatedBiodata.Height,
+            Weight: updatedBiodata.Weight,
+            Age: updatedBiodata.Age,
+            Occupation: updatedBiodata.Occupation,
+            Race: updatedBiodata.Race,
+            FathersName: updatedBiodata.FathersName,
+            MothersName: updatedBiodata.MothersName,
+            PermanentDivisionName: updatedBiodata.PermanentDivisionName,
+            PresentDivisionName: updatedBiodata.PresentDivisionName,
+            ExpectedPartnerAge: updatedBiodata.ExpectedPartnerAge,
+            ExpectedPartnerHeight: updatedBiodata.ExpectedPartnerHeight,
+            ExpectedPartnerWeight: updatedBiodata.ExpectedPartnerWeight,
+            ContactEmail: updatedBiodata.ContactEmail,
+            MobileNumber: updatedBiodata.MobileNumber,
+            MembershipType: updatedBiodata.MembershipType,
+              
+          }
+      }
+      const result = await manageUserCollection.updateOne(filter, newUpdatedBiodata, options)
+      res.send(result)
+  })
 
     //Admin email get 
     app.get('/users/admin/:email', verifyToken, async (req, res) => {
