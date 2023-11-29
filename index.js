@@ -29,6 +29,7 @@ async function run() {
 
     const biodataCollection = client.db("blissfulMatchDB").collection("biodatas");
     const favouriteCollection = client.db("blissfulMatchDB").collection("favourites");
+    const requestCollection = client.db("blissfulMatchDB").collection("requests");
     const manageUserCollection = client.db("blissfulMatchDB").collection("manageUsers");
 
     // jwt related api
@@ -38,33 +39,7 @@ async function run() {
       res.send({ token });
     })
 
-    // middlewares 
-    // const verifyToken = (req, res, next) => {
-    //   console.log('inside verify token', req.headers.authorization);
-    //   if (!req.headers.authorization) {
-    //     return res.status(401).send({ message: 'unauthorized access' });
-    //   }
-    //   const token = req.headers.authorization.split(' ')[1];
-    //   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-    //     if (err) {
-    //       return res.status(401).send({ message: 'unauthorized access' })
-    //     }
-    //     req.decoded = decoded;
-    //     next();
-    //   })
-    // }
-
-    // use verify admin after verifyToken
-    // const verifyAdmin = async (req, res, next) => {
-    //   const email = req.decoded.email;
-    //   const query = { email: email };
-    //   const user = await manageUserCollection.findOne(query);
-    //   const isAdmin = user?.role === 'admin';
-    //   if (!isAdmin) {
-    //     return res.status(403).send({ message: 'forbidden access' });
-    //   }
-    //   next();
-    // }
+    
 
     // Middlewares
     const verifyToken = (req, res, next) => {
@@ -215,6 +190,32 @@ async function run() {
       res.send(result);
     });
 
+    // Requests related api
+    app.get('/requests', async (req, res) => {
+      try {
+        const userEmail = req.query.userEmail;
+        const query = { userEmail: userEmail };
+        console.log(query);
+        const result = await requestCollection.find(query).toArray();
+        res.send(result);
+      } catch (error) {
+        console.error('Error retrieving favorites:', error);
+        res.status(500).send('Internal Server Error');
+      }
+    });
+    // Add to requests
+    app.post('/requests', async (req, res) => {
+      const requestedItem = req.body;
+      const result = await requestCollection.insertOne(requestedItem);
+      res.send(result)
+    })
+    // Delete from requests
+    app.delete("/requests/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await requestCollection.deleteOne({ _id: new ObjectId(id) });
+      res.send(result);
+    });
+    
 
 
     // Connect the client to the server	(optional starting in v4.7)
