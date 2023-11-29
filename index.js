@@ -29,6 +29,7 @@ async function run() {
 
     const biodataCollection = client.db("blissfulMatchDB").collection("biodatas");
     const favouriteCollection = client.db("blissfulMatchDB").collection("favourites");
+    const manageUserCollection = client.db("blissfulMatchDB").collection("manageUsers");
 
     // jwt related api
     app.post('/jwt', async (req, res) => {
@@ -56,27 +57,32 @@ async function run() {
 
     // Biodata related api
     // Get all biodatas
-    app.get("/biodatas",  async (req, res) => {
-      console.log(req.headers)
+    app.get("/biodatas", async (req, res) => {
+      // console.log(req.headers)
       const result = await biodataCollection.find().toArray();
       res.send(result);
-    });
+    });  
 
     // User related api
-    app.post('/biodatas', async (req, res) => {
+    app.get("/users", async(req, res) => {
+      const result = await manageUserCollection.find().toArray();
+      res.send(result)
+    });
+
+    app.post('/users', async (req, res) => {
       const user = req.body;
       // insert email if user doesnt exists: 
-      const query = { ContactEmail: user.ContactEmail }
-      const existingUser = await biodataCollection.findOne(query);
+      const query = { email: user.email }
+      const existingUser = await manageUserCollection.findOne(query);
       if (existingUser) {
         return res.send({ message: 'user already exists', insertedId: null })
       }
-      const result = await biodataCollection.insertOne(user);
+      const result = await manageUserCollection.insertOne(user);
       res.send(result);
     });
 
     // Make admin a User
-    app.patch('/biodatas/admin/:id', async (req, res) => {
+    app.patch('/users/admin/:id', async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
@@ -84,27 +90,21 @@ async function run() {
           role: 'admin'
         }
       }
-      const result = await biodataCollection.updateOne(filter, updatedDoc);
+      const result = await manageUserCollection.updateOne(filter, updatedDoc);
       res.send(result);
     })
-
-    // app.get("/biodatas", async (req, res) => {
-    //   const { biodataType } = req.query;
-
-    //   let filter = {};
-    //   if (biodataType) {
-    //     filter = { Biodata: biodataType };
-    //   }
-
-    //   try {
-    //     const result = await biodataCollection.find(filter).toArray();
-    //     res.send(result);
-    //   } catch (error) {
-    //     console.error("Error fetching data:", error);
-    //     res.status(500).send("Internal Server Error");
-    //   }
-    // });
-
+    // Make  User Premium
+    app.patch('/users/premium/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          MembershipType: "Premium"
+        }
+      }
+      const result = await manageUserCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    })
 
     // GET sorted Featured biodata for homepage
     app.get('/featuredBiodata', async (req, res) => {
