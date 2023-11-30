@@ -104,6 +104,13 @@ async function run() {
       res.send(result);
     });
 
+    // Get specifiq user by email to view profile
+    app.get("/users/viewBiodata/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await manageUserCollection.findOne({ email: email });
+      res.send(result);
+      });
+
     // Update User profile 
     app.put('/users/:email', async (req, res) => {
       const email = req.params.email;
