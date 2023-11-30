@@ -31,6 +31,7 @@ async function run() {
     const favouriteCollection = client.db("blissfulMatchDB").collection("favourites");
     const requestCollection = client.db("blissfulMatchDB").collection("requests");
     const manageUserCollection = client.db("blissfulMatchDB").collection("manageUsers");
+    const ratingsCollection = client.db("blissfulMatchDB").collection("ratings");
 
     // jwt related api
     app.post('/jwt', async (req, res) => {
@@ -81,7 +82,6 @@ async function run() {
     // Biodata related api
     // Get all biodatas
     app.get("/biodatas", async (req, res) => {
-      // console.log(req.headers)
       const result = await biodataCollection.find().toArray();
       res.send(result);
     });
@@ -265,6 +265,20 @@ async function run() {
       const result = await requestCollection.deleteOne({ _id: new ObjectId(id) });
       res.send(result);
     });
+
+
+    // Ratings related api
+    app.get("/ratings", async (req, res) => {
+      const result = await ratingsCollection.find().toArray();
+      res.send(result);
+    });
+    // Subbmit ratings
+    app.post("/ratings", async (req, res) => {
+      const service = req.body;
+      const result = await ratingsCollection.insertOne(service);
+      res.send(result);
+      });
+
     
 
 
