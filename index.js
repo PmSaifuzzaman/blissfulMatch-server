@@ -81,10 +81,41 @@ async function run() {
 
     // Biodata related api
     // Get all biodatas
+    // app.get("/biodatas", async (req, res) => {
+    //   const result = await biodataCollection.find().toArray();
+    //   res.send(result);
+    // });
+
     app.get("/biodatas", async (req, res) => {
-      const result = await biodataCollection.find().toArray();
-      res.send(result);
-    });
+      // Extracting query parameters
+      const { age, biodata, division } = req.query;
+  
+      // Constructing the filter object based on provided parameters
+      const filter = {};
+      if (age) {
+          // Assuming age is in the format "20-25"
+          const [minAge, maxAge] = age.split('-');
+          filter.Age = { $gte: parseInt(minAge), $lte: parseInt(maxAge) };
+      }
+      if (biodata) {
+          filter.Biodata = biodata;
+      }
+      if (division) {
+          filter.PresentDivisionName = division;
+      }
+  
+      try {
+          // Applying the filter to the MongoDB query
+          const result = await biodataCollection.find(filter).toArray();
+  
+          // Sending the filtered result as the response
+          res.send(result);
+      } catch (error) {
+          console.error("Error fetching biodatas:", error);
+          res.status(500).send("Internal Server Error");
+      }
+  });
+  
 
     // User related api
     app.get("/users", async (req, res) => {
