@@ -91,6 +91,14 @@ async function run() {
       const result = await manageUserCollection.find().toArray();
       res.send(result)
     });
+
+    // Get premium user by query
+    app.get('/users/approvedPremium', async (req, res) => {
+      const cursor = manageUserCollection.find({ MembershipType: 'Premium' }).sort({ Age: -1 });
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     // 
     app.post('/users', async (req, res) => {
       const user = req.body;
