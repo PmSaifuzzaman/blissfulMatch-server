@@ -5,6 +5,7 @@ const cors = require('cors');
 require('dotenv').config()
 const app = express()
 const port = process.env.PORT || 5000
+const stripe = require("stripe")(process.env.STRIPE_KEY);
 
 // middleware
 app.use(cors())
@@ -90,20 +91,18 @@ async function run() {
 
     app.get("/biodatas", async (req, res) => {
       // Extracting query parameters
-      const { age, biodata, division } = req.query;
+      const { biodata, division, minAge, maxAge } = req.query;
 
       // Constructing the filter object based on provided parameters
       const filter = {};
-      if (age) {
-        // Assuming age is in the format "20-25"
-        const [minAge, maxAge] = age.split('-');
-        filter.Age = { $gte: parseInt(minAge), $lte: parseInt(maxAge) };
-      }
       if (biodata) {
         filter.Biodata = biodata;
       }
       if (division) {
-        filter.PresentDivisionName = division;
+        filter.PermanentDivisionName = division;
+      }
+      if (minAge && maxAge) {
+        filter.Age = { $gte: parseInt(minAge), $lte: parseInt(maxAge) };
       }
 
       try {
@@ -117,6 +116,7 @@ async function run() {
         res.status(500).send("Internal Server Error");
       }
     });
+
 
 
     // User related api
@@ -268,7 +268,7 @@ async function run() {
         //   const id = req.params.id;
         // const filter = { _id: new ObjectId(id) };
         const id = req.query?.id
-        const query = { _id: new ObjectId(id)}
+        const query = { _id: new ObjectId(id) }
         const updateDoc = {
           $set: {
             premiumRequestStatus: 'approved',
@@ -288,18 +288,6 @@ async function run() {
         console.log(error)
       }
     })
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -392,6 +380,33 @@ async function run() {
       const result = await ratingsCollection.insertOne(service);
       res.send(result);
     });
+
+
+    // create payment intent
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      const taka = parseFloat(price * 100);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: taka,
+        currency: 'usd',
+        payment_method_types: [
+          'card'
+        ]
+      })
+      res.send({ clientSecret: paymentIntent.client_secret });
+    })
+
+    app.post("/payments", async (req, res) => {
+      const requesterData = req.body;
+      const query = { $and: [{ neededID: requesterData.neededID, requesterEmail: requesterData.requesterEmail }] }
+      const available = await requestCollection.findOne(query)
+      if (available) {
+        return res.send({ message: 'Already requested' })
+      }
+      const result = await requestCollection.insertOne(requesterData);
+      console.log(result)
+      res.send(result);
+    })
 
 
 
