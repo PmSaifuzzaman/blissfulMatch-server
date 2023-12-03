@@ -290,8 +290,33 @@ async function run() {
     })
 
 
+    // all contact request for admin 
+    app.get('/contact-request-for-admin', async (req, res) => {
+      try {
+        const result = await requestCollection.find().toArray();
+        res.send(result);
+      } catch (error) {
+        console.log(error)
+      }
+    })
 
-
+    // approve-contact-request
+    app.patch('/approve-contact-request', async (req, res) => {
+      try {
+        const id = req.query.id
+        const query = { _id: new ObjectId(id) }
+        const updateDoc = {
+          $set: {
+            status: 'approved',
+          },
+        };
+        const updateResult = await requestCollection.updateOne(query, updateDoc);
+        console.log(updateResult)
+        res.send(updateResult);
+      } catch (error) {
+        console.log(error)
+      }
+    })
 
 
 
