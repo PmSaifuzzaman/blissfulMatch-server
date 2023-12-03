@@ -318,6 +318,17 @@ async function run() {
       }
     })
 
+    // delete from requests
+    app.delete('/delete-requested-contact', async (req, res) => {
+      try {
+        const id = req.query.id;
+        const result = await requestCollection.deleteOne({ _id: new ObjectId(id) });
+        res.send(result);
+      } catch (error) {
+        console.log(error)
+      }
+    })
+
 
 
 
