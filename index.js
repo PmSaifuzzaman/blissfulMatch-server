@@ -33,6 +33,8 @@ async function run() {
     const manageUserCollection = client.db("blissfulMatchDB").collection("manageUsers");
     const ratingsCollection = client.db("blissfulMatchDB").collection("ratings");
 
+    const premiumRequests = client.db("blissfulMatchDB").collection("premiumRequests");
+
     // jwt related api
     app.post('/jwt', async (req, res) => {
       const user = req.body;
@@ -40,7 +42,7 @@ async function run() {
       res.send({ token });
     })
 
-    
+
 
     // Middlewares
     const verifyToken = (req, res, next) => {
@@ -89,33 +91,33 @@ async function run() {
     app.get("/biodatas", async (req, res) => {
       // Extracting query parameters
       const { age, biodata, division } = req.query;
-  
+
       // Constructing the filter object based on provided parameters
       const filter = {};
       if (age) {
-          // Assuming age is in the format "20-25"
-          const [minAge, maxAge] = age.split('-');
-          filter.Age = { $gte: parseInt(minAge), $lte: parseInt(maxAge) };
+        // Assuming age is in the format "20-25"
+        const [minAge, maxAge] = age.split('-');
+        filter.Age = { $gte: parseInt(minAge), $lte: parseInt(maxAge) };
       }
       if (biodata) {
-          filter.Biodata = biodata;
+        filter.Biodata = biodata;
       }
       if (division) {
-          filter.PresentDivisionName = division;
+        filter.PresentDivisionName = division;
       }
-  
+
       try {
-          // Applying the filter to the MongoDB query
-          const result = await biodataCollection.find(filter).toArray();
-  
-          // Sending the filtered result as the response
-          res.send(result);
+        // Applying the filter to the MongoDB query
+        const result = await biodataCollection.find(filter).toArray();
+
+        // Sending the filtered result as the response
+        res.send(result);
       } catch (error) {
-          console.error("Error fetching biodatas:", error);
-          res.status(500).send("Internal Server Error");
+        console.error("Error fetching biodatas:", error);
+        res.status(500).send("Internal Server Error");
       }
-  });
-  
+    });
+
 
     // User related api
     app.get("/users", async (req, res) => {
@@ -148,7 +150,7 @@ async function run() {
       const email = req.params.email;
       const result = await manageUserCollection.findOne({ email: email });
       res.send(result);
-      });
+    });
 
     // Update User profile 
     app.put('/users/:email', async (req, res) => {
@@ -157,33 +159,33 @@ async function run() {
       const options = { upsert: true };
       const updatedBiodata = req.body;
       const newUpdatedBiodata = {
-          $set: {
-            Biodata: updatedBiodata.Biodata,
-            BiodataNumber: updatedBiodata.BiodataNumber,
-            Name: updatedBiodata.Name,
-            ProfileImage: updatedBiodata.ProfileImage,
-            DateOfBirth: updatedBiodata.DateOfBirth,
-            Height: updatedBiodata.Height,
-            Weight: updatedBiodata.Weight,
-            Age: updatedBiodata.Age,
-            Occupation: updatedBiodata.Occupation,
-            Race: updatedBiodata.Race,
-            FathersName: updatedBiodata.FathersName,
-            MothersName: updatedBiodata.MothersName,
-            PermanentDivisionName: updatedBiodata.PermanentDivisionName,
-            PresentDivisionName: updatedBiodata.PresentDivisionName,
-            ExpectedPartnerAge: updatedBiodata.ExpectedPartnerAge,
-            ExpectedPartnerHeight: updatedBiodata.ExpectedPartnerHeight,
-            ExpectedPartnerWeight: updatedBiodata.ExpectedPartnerWeight,
-            ContactEmail: updatedBiodata.ContactEmail,
-            MobileNumber: updatedBiodata.MobileNumber,
-            MembershipType: updatedBiodata.MembershipType,
-              
-          }
+        $set: {
+          Biodata: updatedBiodata.Biodata,
+          BiodataNumber: updatedBiodata.BiodataNumber,
+          Name: updatedBiodata.Name,
+          ProfileImage: updatedBiodata.ProfileImage,
+          DateOfBirth: updatedBiodata.DateOfBirth,
+          Height: updatedBiodata.Height,
+          Weight: updatedBiodata.Weight,
+          Age: updatedBiodata.Age,
+          Occupation: updatedBiodata.Occupation,
+          Race: updatedBiodata.Race,
+          FathersName: updatedBiodata.FathersName,
+          MothersName: updatedBiodata.MothersName,
+          PermanentDivisionName: updatedBiodata.PermanentDivisionName,
+          PresentDivisionName: updatedBiodata.PresentDivisionName,
+          ExpectedPartnerAge: updatedBiodata.ExpectedPartnerAge,
+          ExpectedPartnerHeight: updatedBiodata.ExpectedPartnerHeight,
+          ExpectedPartnerWeight: updatedBiodata.ExpectedPartnerWeight,
+          ContactEmail: updatedBiodata.ContactEmail,
+          MobileNumber: updatedBiodata.MobileNumber,
+          MembershipType: updatedBiodata.MembershipType,
+
+        }
       }
       const result = await manageUserCollection.updateOne(filter, newUpdatedBiodata, options)
       res.send(result)
-  })
+    })
 
     //Admin email get 
     app.get('/users/admin/:email', verifyToken, async (req, res) => {
@@ -227,6 +229,87 @@ async function run() {
       const result = await manageUserCollection.updateOne(filter, updatedDoc);
       res.send(result);
     })
+
+
+
+
+
+    // premium request api
+    app.post('/premium-request', async (req, res) => {
+      try {
+        const requestedData = req.body
+        const query = { ContactEmail: requestedData.email }
+        const updateDoc = {
+          $set: {
+            premiumRequestStatus: 'pending'
+          },
+        };
+        await manageUserCollection.updateOne(query, updateDoc)
+        const result = await premiumRequests.insertOne(requestedData);
+        res.send(result);
+      } catch (error) {
+        console.log(error)
+      }
+    })
+
+    // manage premium request
+    app.get('/manage-premium-request', async (req, res) => {
+      try {
+        const result = await premiumRequests.find().toArray();
+        res.send(result);
+      } catch (error) {
+        console.log(error)
+      }
+    })
+
+    // approve premium
+    app.patch('/approve-premium', async (req, res) => {
+      try {
+        //   const id = req.params.id;
+        // const filter = { _id: new ObjectId(id) };
+        const id = req.query?.id
+        const query = { _id: new ObjectId(id)}
+        const updateDoc = {
+          $set: {
+            premiumRequestStatus: 'approved',
+            MembershipType: 'Premium'
+          },
+        };
+        const updateResult = await manageUserCollection.updateOne(query, updateDoc);
+        const updateDoc2 = {
+          $set: {
+            premiumRequestStatus: 'approved',
+          },
+        }
+        const result = await premiumRequests.updateOne(query, updateDoc2)
+        console.log(result)
+        res.send(result);
+      } catch (error) {
+        console.log(error)
+      }
+    })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // GET sorted Featured biodata for homepage
     app.get('/featuredBiodata', async (req, res) => {
@@ -308,15 +391,15 @@ async function run() {
       const service = req.body;
       const result = await ratingsCollection.insertOne(service);
       res.send(result);
-      });
+    });
 
-    
+
 
 
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
