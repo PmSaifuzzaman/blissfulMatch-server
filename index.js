@@ -93,6 +93,10 @@ async function run() {
       // Extracting query parameters
       const { biodata, division, minAge, maxAge } = req.query;
 
+      // console.log(biodata)
+      // console.log(division)
+      
+
       // Constructing the filter object based on provided parameters
       const filter = {};
       if (biodata) {
